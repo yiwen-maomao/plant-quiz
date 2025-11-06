@@ -87,9 +87,26 @@
     <script>
         // -------------------------------------------------------------------------
         // 題庫 (學名, 中文俗名)
-        // 將改為從 CSV 載入
+        // 您可以在此處添加更多植物
         // -------------------------------------------------------------------------
-        let plantQuizData = []; // 初始化為空陣列
+        const plantQuizData = [
+            { scientific: 'Rosa chinensis', common: '中國月季' },
+            { scientific: 'Helianthus annuus', common: '向日葵' },
+            { scientific: 'Lilium formosanum', common: '台灣百合' },
+            { scientific: 'Prunus serrulata', common: '日本櫻花' },
+            { scientific: 'Solanum lycopersicum', common: '番茄' },
+            { scientific: 'Fragaria × ananassa', common: '草莓' },
+            { scientific: 'Acer palmatum', common: '日本楓樹' },
+            { scientific: 'Wisteria sinensis', common: '紫藤' },
+            { scientific: 'Phalaenopsis aphrodite', common: '台灣蝴蝶蘭' },
+            { scientific: 'Hibiscus rosa-sinensis', common: '朱槿' },
+            { scientific: 'Cattleya mossiae', common: '嘉德麗雅蘭' },
+            { scientific: 'Nelumbo nucifera', common: '蓮花' },
+            { scientific: 'Bougainvillea spectabilis', common: '九重葛' },
+            { scientific: 'Osmanthus fragrans', common: '桂花' },
+            { scientific: 'Zea mays', common: '玉米' },
+            { scientific: 'Oryza sativa', common: '稻米' }
+        ];
 
         // -------------------------------------------------------------------------
         // DOM 元素
@@ -104,84 +121,8 @@
         // -------------------------------------------------------------------------
         // 遊戲狀態
         // -------------------------------------------------------------------------
-        let currentCorrectAnswer = null; // 儲存 { scientific, commonNames[], family }
-        let currentCorrectCommonName = null; // 儲存被選中的正確俗名 (字串)
+        let currentCorrectAnswer = null;
         let isLoading = false;
-
-        // -------------------------------------------------------------------------
-        // CSV 載入函數
-        // -------------------------------------------------------------------------
-        /**
-         * 載入並解析 CSV 檔案
-         */
-        async function loadCSVData() {
-            const csvUrl = 'Family_plant_list2 (1).csv'; // 指向您上傳的檔案
-            try {
-                const response = await fetch(csvUrl);
-                if (!response.ok) throw new Error(`無法載入 CSV 檔案: ${response.statusText}`);
-                
-                const csvText = await response.text();
-                const lines = csvText.split(/\r?\n/); // 按行分割
-                
-                if (lines.length < 2) {
-                    throw new Error('CSV 檔案行數不足 (至少需要標頭和一行資料)');
-                }
-
-                // Line 1: 讀取科別
-                const families = lines[0].split(',').map(f => f.trim());
-                
-                plantQuizData = []; // 重置題庫
-                const regex = /"(.*?)"/g; // 尋找引號內的內容
-
-                // 從第二行 (index 1) 開始遍歷資料行
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (line.length === 0) continue; // 跳過空行
-
-                    // 找到該行所有的植物資料 (e.g., "Acroceras...","Actinoscirpus...")
-                    // 'matchAll' 會返回一個迭代器，'Array.from' 將其轉換為陣列
-                    // 陣列中每個元素 'match' 的 'colIndex' 對應 'families' 陣列中的索引
-                    const matches = Array.from(line.matchAll(regex));
-                    
-                    matches.forEach((match, colIndex) => {
-                        // 確保科別索引在範圍內
-                        if (colIndex < families.length) {
-                            const content = match[1]; // 引號內的內容 (e.g., "Acroceras macrum,尼羅草")
-                            const family = families[colIndex]; // 對應的科別
-                            
-                            const parts = content.split(',');
-                            
-                            if (parts.length >= 2) {
-                                const scientific = parts[0].trim();
-                                // 抓取所有俗名
-                                const commonNames = parts.slice(1)
-                                                         .map(name => name.trim())
-                                                         .filter(name => name.length > 0);
-                                
-                                // 確保所有資料都有效
-                                if (scientific && commonNames.length > 0 && family && scientific.includes(' ')) {
-                                    plantQuizData.push({ scientific, commonNames, family });
-                                }
-                            }
-                        }
-                    });
-                }
-
-
-                if (plantQuizData.length < 4) {
-                    throw new Error('從 CSV 載入的植物資料不足 (少於 4 筆)');
-                }
-                
-                console.log(`成功從 CSV 載入 ${plantQuizData.length} 筆植物資料。`);
-
-            } catch (error) {
-                console.error('載入 CSV 資料失敗:', error);
-                // 向使用者顯示錯誤訊息
-                feedbackMessage.textContent = '載入題庫失敗，請檢查檔案格式。';
-                feedbackMessage.classList.add('text-red-400');
-                imageSpinner.classList.add('hidden'); // 隱藏載入動畫
-            }
-        }
 
         // -------------------------------------------------------------------------
         // iNaturalist API 函數
@@ -262,62 +203,19 @@
             imageSpinner.classList.remove('hidden'); // 顯示載入動畫
 
             try {
-                // 確保題庫已載入
-                if (plantQuizData.length < 4) {
-                    throw new Error('題庫資料不足，無法出題。');
-                }
-
-                // 2. 挑選 1 個正確答案
+                // 2. 挑選 4 個不重複的植物
                 const shuffledPlants = shuffleArray([...plantQuizData]);
-                currentCorrectAnswer = shuffledPlants[0]; // 格式: { scientific, commonNames, family }
-                const correctFamily = currentCorrectAnswer.family;
+                const selectedPlants = shuffledPlants.slice(0, 4);
 
-                // 3. 隨機選一個正確俗名
-                currentCorrectCommonName = currentCorrectAnswer.commonNames[Math.floor(Math.random() * currentCorrectAnswer.commonNames.length)];
+                // 3. 指定一個為正確答案
+                currentCorrectAnswer = selectedPlants[0];
+                const options = selectedPlants.map(p => ({ common: p.common, scientific: p.scientific }));
                 
-                // 4. 準備選項池 (所有 *其他* 植物)
-                const otherPlants = shuffledPlants.slice(1);
+                // 4. 打亂選項
+                const shuffledOptions = shuffleArray(options);
+                populateOptions(shuffledOptions);
 
-                // 5. 篩選同科別的
-                const sameFamilyPool = otherPlants.filter(p => p.family === correctFamily);
-                
-                // 6. 篩選不同科別的
-                const otherFamilyPool = otherPlants.filter(p => p.family !== correctFamily);
-
-                // 7. 建立 3 個錯誤選項
-                let otherOptions = [];
-                const needed = 3;
-
-                // 先從同科別取
-                const sameFamilyToAdd = sameFamilyPool.slice(0, needed);
-                otherOptions.push(...sameFamilyToAdd);
-
-                // 8. 如果不足，再從不同科別補
-                const remainingSlots = needed - otherOptions.length;
-                if (remainingSlots > 0) {
-                    const otherFamilyToAdd = otherFamilyPool.slice(0, remainingSlots);
-                    otherOptions.push(...otherFamilyToAdd);
-                }
-                
-                // 9. 組合最終選項 (1 正確 + 3 錯誤)
-                const finalOptions = [currentCorrectAnswer, ...otherOptions];
-
-                // 10. 轉換為按鈕格式 { common, scientific }
-                const optionsForButtons = finalOptions.map(p => {
-                    // 如果是正確答案，使用上面選中的俗名
-                    // 如果是其他選項，也從它們的俗名中隨機選一個
-                    const chosenCommonName = (p.scientific === currentCorrectAnswer.scientific)
-                        ? currentCorrectCommonName
-                        : p.commonNames[Math.floor(Math.random() * p.commonNames.length)];
-                        
-                    return { common: chosenCommonName, scientific: p.scientific };
-                });
-                
-                // 11. 打亂選項並生成按鈕
-                const shuffledButtonOptions = shuffleArray(optionsForButtons);
-                populateOptions(shuffledButtonOptions);
-
-                // 12. 抓取圖片
+                // 5. 抓取圖片
                 const taxonId = await getTaxonId(currentCorrectAnswer.scientific);
                 if (!taxonId) throw new Error(`找不到 ${currentCorrectAnswer.scientific} 的 Taxon ID`);
 
@@ -337,13 +235,12 @@
                 };
                 plantImage.onerror = () => {
                     // 圖片載入失敗
-                    console.error('圖片載入失敗，嘗試下一題');
                     throw new Error('圖片載入失敗');
                 }
 
             } catch (error) {
                 console.error('載入問題時出錯:', error);
-                feedbackMessage.textContent = '載入問題失敗，自動嘗試下一題...';
+                feedbackMessage.textContent = '載入問題失敗，請稍後重試...';
                 feedbackMessage.classList.add('text-red-400');
                 // 1 秒後自動重試
                 setTimeout(loadNewQuestion, 1000);
@@ -375,7 +272,6 @@
             buttons.forEach(button => button.disabled = false);
         }
 
-
         /**
          * 禁用選項
          */
@@ -391,7 +287,7 @@
             if (isLoading) return;
             disableOptions(); // 回答後禁用所有選項
 
-            const isCorrect = selectedOption.common === currentCorrectCommonName;
+            const isCorrect = selectedOption.common === currentCorrectAnswer.common;
 
             if (isCorrect) {
                 button.classList.add('correct'); // 綠色
@@ -399,12 +295,12 @@
                 feedbackMessage.classList.add('text-green-400');
             } else {
                 button.classList.add('incorrect'); // 紅色
-                feedbackMessage.textContent = `答錯了。這是 ${currentCorrectCommonName}。`;
+                feedbackMessage.textContent = `答錯了。這是 ${currentCorrectAnswer.common}。`;
                 feedbackMessage.classList.add('text-red-400');
 
                 // 標記出正確答案
                 const correctButton = Array.from(optionsGrid.children).find(
-                    btn => btn.dataset.common === currentCorrectCommonName
+                    btn => btn.dataset.common === currentCorrectAnswer.common
                 );
                 if (correctButton) {
                     correctButton.classList.add('correct');
@@ -420,26 +316,8 @@
         // -------------------------------------------------------------------------
         
         // 頁面載入時
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 顯示載入動畫
-            imageSpinner.classList.remove('hidden');
-            feedbackMessage.textContent = '正在載入題庫...';
-            
-            // 先載入 CSV，再載入第一個問題
-            await loadCSVData();
-            
-            if (plantQuizData.length >= 4) {
-                feedbackMessage.textContent = ''; // 清除載入訊息
-                loadNewQuestion();
-            } else {
-                // loadCSVData 內部已有錯誤處理
-                console.error('題庫資料不足，無法開始遊戲。');
-                if (!feedbackMessage.textContent.includes('失敗')) {
-                    feedbackMessage.textContent = '題庫資料不足，無法開始遊戲。';
-                    feedbackMessage.classList.add('text-red-400');
-                    imageSpinner.classList.add('hidden');
-                }
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNewQuestion();
         });
 
         // 點擊 "下一題"
