@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物識別練習</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Inter 字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            /* 優先使用 Noto Sans TC (繁中)，Inter 作為後備 */
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 載入動畫 */
+        .loader {
+            border: 5px solid #f3f3f3; /* Light grey */
+            border-top: 5px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 自訂按鈕狀態的樣式 */
+        .option-button.correct {
+            background-color: #22c55e; /* green-500 */
+            border-color: #86efac; /* green-300 */
+            color: white;
+        }
+        .option-button.incorrect {
+            background-color: #ef4444; /* red-500 */
+            border-color: #fca5a5; /* red-300 */
+            color: white;
+        }
+        .option-button:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="flex flex-col items-center justify-center min-h-screen p-4">
+        
+        <h1 class="text-3xl font-bold mb-6 text-center">植物識別練習</h1>
+        
+        <p class="text-gray-400 mb-6 text-center max-w-lg">請根據下方的圖片，選出正確的植物名稱。</p>
+
+        <!-- 圖片容器 -->
+        <div id="image-container" class="w-full max-w-lg h-80 sm:h-96 bg-gray-800 rounded-lg shadow-xl mb-6 flex items-center justify-center overflow-hidden border-2 border-gray-700">
+            <!-- 載入動畫 -->
+            <div id="image-spinner" class="loader"></div>
+            <!-- 植物圖片 -->
+            <img id="plant-image" src="" alt="植物照片" class="w-full h-full object-cover hidden">
+        </div>
+
+        <!-- 選項網格 -->
+        <div id="options-grid" class="grid grid-cols-2 gap-4 w-full max-w-lg">
+            <!-- 選項按鈕將由 JS 動態生成 -->
+        </div>
+
+        <!-- 反饋訊息 -->
+        <div id="feedback-message" class="mt-4 text-xl h-8 text-center font-medium">
+            <!-- e.g., "答對了！" or "答錯了。" -->
+        </div>
+
+        <!-- 下一題按鈕 -->
+        <button id="next-button" class="mt-4 px-8 py-3 bg-blue-600 rounded-lg text-lg font-semibold hover:bg-blue-500 transition-all duration-200 shadow-lg hidden">
+            下一題
+        </button>
+
+    </div>
+
+    <script>
+        // -------------------------------------------------------------------------
+        // 題庫 (學名, 中文俗名)
+        // 將改為從 CSV 載入
+        // -------------------------------------------------------------------------
+        let plantQuizData = []; // 初始化為空陣列
+
+        // -------------------------------------------------------------------------
+        // DOM 元素
+        // -------------------------------------------------------------------------
+        const imageContainer = document.getElementById('image-container');
+        const imageSpinner = document.getElementById('image-spinner');
+        const plantImage = document.getElementById('plant-image');
+        const optionsGrid = document.getElementById('options-grid');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextButton = document.getElementById('next-button');
+
+        // -------------------------------------------------------------------------
+        // 遊戲狀態
+        // -------------------------------------------------------------------------
+        let currentCorrectAnswer = null; // 儲存 { scientific, commonNames[], family }
+        let currentCorrectCommonName = null; // 儲存被選中的正確俗名 (字串)
+        let isLoading = false;
+
+        // -------------------------------------------------------------------------
+        // CSV 載入函數
+        // -------------------------------------------------------------------------
+        /**
+         * 載入並解析 CSV 檔案
+         */
+        async function loadCSVData() {
+            const csvUrl = 'Family_plant_list2 (1).csv'; // 指向您上傳的檔案
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error(`無法載入 CSV 檔案: ${response.statusText}`);
+                
+                const csvText = await response.text();
+                const lines = csvText.split(/\r?\n/); // 按行分割
+                
+                if (lines.length < 2) {
+                    throw new Error('CSV 檔案行數不足 (至少需要標頭和一行資料)');
+                }
+
+                // Line 1: 讀取科別
+                const families = lines[0].split(',').map(f => f.trim());
+                
+                plantQuizData = []; // 重置題庫
+                const regex = /"(.*?)"/g; // 尋找引號內的內容
+
+                // 從第二行 (index 1) 開始遍歷資料行
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.length === 0) continue; // 跳過空行
+
+                    // 找到該行所有的植物資料 (e.g., "Acroceras...","Actinoscirpus...")
+                    // 'matchAll' 會返回一個迭代器，'Array.from' 將其轉換為陣列
+                    // 陣列中每個元素 'match' 的 'colIndex' 對應 'families' 陣列中的索引
+                    const matches = Array.from(line.matchAll(regex));
+                    
+                    matches.forEach((match, colIndex) => {
+                        // 確保科別索引在範圍內
+                        if (colIndex < families.length) {
+                            const content = match[1]; // 引號內的內容 (e.g., "Acroceras macrum,尼羅草")
+                            const family = families[colIndex]; // 對應的科別
+                            
+                            const parts = content.split(',');
+                            
+                            if (parts.length >= 2) {
+                                const scientific = parts[0].trim();
+                                // 抓取所有俗名
+                                const commonNames = parts.slice(1)
+                                                         .map(name => name.trim())
+                                                         .filter(name => name.length > 0);
+                                
+                                // 確保所有資料都有效
+                                if (scientific && commonNames.length > 0 && family && scientific.includes(' ')) {
+                                    plantQuizData.push({ scientific, commonNames, family });
+                                }
+                            }
+                        }
+                    });
+                }
+
+
+                if (plantQuizData.length < 4) {
+                    throw new Error('從 CSV 載入的植物資料不足 (少於 4 筆)');
+                }
+                
+                console.log(`成功從 CSV 載入 ${plantQuizData.length} 筆植物資料。`);
+
+            } catch (error) {
+                console.error('載入 CSV 資料失敗:', error);
+                // 向使用者顯示錯誤訊息
+                feedbackMessage.textContent = '載入題庫失敗，請檢查檔案格式。';
+                feedbackMessage.classList.add('text-red-400');
+                imageSpinner.classList.add('hidden'); // 隱藏載入動畫
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // iNaturalist API 函數
+        // -------------------------------------------------------------------------
+
+        /**
+         * 根據學名查詢物種的 taxon_id
+         */
+        async function getTaxonId(scientificName) {
+            const url = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`API 響應錯誤: ${response.status}`);
+                const data = await response.json();
+                if (data.total_results > 0) {
+                    // 確保我們拿到的是完全匹配的物種
+                    const exactMatch = data.results.find(r => r.name.toLowerCase() === scientificName.toLowerCase());
+                    return exactMatch ? exactMatch.id : data.results[0].id;
+                } else {
+                    console.error(`未找到 ${scientificName} 的 taxon_id`);
+                    return null;
+                }
+            } catch (error) {
+                console.error('getTaxonId 請求失敗:', error);
+                return null;
+            }
+        }
+
+        /**
+         * 根據 taxon_id 獲取觀察記錄的照片
+         */
+        async function getObservationPhotos(taxonId, perPage = 20) {
+            const url = `https://api.inaturalist.org/v1/observations?taxon_id=${taxonId}&per_page=${perPage}&order=desc&order_by=created_at&photos=true`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`API 響應錯誤: ${response.status}`);
+                const data = await response.json();
+                
+                const photoUrls = data.results
+                    .flatMap(result => result.photos || [])
+                    .map(photo => photo.url.replace('square', 'large')); // 將方形圖片替換為大圖
+                
+                return photoUrls.filter(url => url); // 過濾掉無效的 URL
+            } catch (error) {
+                console.error('getObservationPhotos 請求失敗:', error);
+                return [];
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 遊戲邏輯函數
+        // -------------------------------------------------------------------------
+
+        /**
+         * 隨機打亂陣列
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /**
+         * 載入新問題
+         */
+        async function loadNewQuestion() {
+            if (isLoading) return;
+            isLoading = true;
+
+            // 1. 重置 UI
+            feedbackMessage.textContent = '';
+            feedbackMessage.className = 'mt-4 text-xl h-8 text-center font-medium'; // 重置顏色
+            nextButton.classList.add('hidden');
+            optionsGrid.innerHTML = ''; // 清空選項
+            plantImage.classList.add('hidden'); // 隱藏圖片
+            imageSpinner.classList.remove('hidden'); // 顯示載入動畫
+
+            try {
+                // 確保題庫已載入
+                if (plantQuizData.length < 4) {
+                    throw new Error('題庫資料不足，無法出題。');
+                }
+
+                // 2. 挑選 1 個正確答案
+                const shuffledPlants = shuffleArray([...plantQuizData]);
+                currentCorrectAnswer = shuffledPlants[0]; // 格式: { scientific, commonNames, family }
+                const correctFamily = currentCorrectAnswer.family;
+
+                // 3. 隨機選一個正確俗名
+                currentCorrectCommonName = currentCorrectAnswer.commonNames[Math.floor(Math.random() * currentCorrectAnswer.commonNames.length)];
+                
+                // 4. 準備選項池 (所有 *其他* 植物)
+                const otherPlants = shuffledPlants.slice(1);
+
+                // 5. 篩選同科別的
+                const sameFamilyPool = otherPlants.filter(p => p.family === correctFamily);
+                
+                // 6. 篩選不同科別的
+                const otherFamilyPool = otherPlants.filter(p => p.family !== correctFamily);
+
+                // 7. 建立 3 個錯誤選項
+                let otherOptions = [];
+                const needed = 3;
+
+                // 先從同科別取
+                const sameFamilyToAdd = sameFamilyPool.slice(0, needed);
+                otherOptions.push(...sameFamilyToAdd);
+
+                // 8. 如果不足，再從不同科別補
+                const remainingSlots = needed - otherOptions.length;
+                if (remainingSlots > 0) {
+                    const otherFamilyToAdd = otherFamilyPool.slice(0, remainingSlots);
+                    otherOptions.push(...otherFamilyToAdd);
+                }
+                
+                // 9. 組合最終選項 (1 正確 + 3 錯誤)
+                const finalOptions = [currentCorrectAnswer, ...otherOptions];
+
+                // 10. 轉換為按鈕格式 { common, scientific }
+                const optionsForButtons = finalOptions.map(p => {
+                    // 如果是正確答案，使用上面選中的俗名
+                    // 如果是其他選項，也從它們的俗名中隨機選一個
+                    const chosenCommonName = (p.scientific === currentCorrectAnswer.scientific)
+                        ? currentCorrectCommonName
+                        : p.commonNames[Math.floor(Math.random() * p.commonNames.length)];
+                        
+                    return { common: chosenCommonName, scientific: p.scientific };
+                });
+                
+                // 11. 打亂選項並生成按鈕
+                const shuffledButtonOptions = shuffleArray(optionsForButtons);
+                populateOptions(shuffledButtonOptions);
+
+                // 12. 抓取圖片
+                const taxonId = await getTaxonId(currentCorrectAnswer.scientific);
+                if (!taxonId) throw new Error(`找不到 ${currentCorrectAnswer.scientific} 的 Taxon ID`);
+
+                const photos = await getObservationPhotos(taxonId);
+                if (photos.length === 0) throw new Error(`找不到 ${currentCorrectAnswer.scientific} 的照片`);
+
+                // 6. 隨機選一張照片並顯示
+                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                plantImage.src = randomPhoto;
+                
+                plantImage.onload = () => {
+                    // 圖片載入完成後
+                    imageSpinner.classList.add('hidden');
+                    plantImage.classList.remove('hidden');
+                    isLoading = false;
+                    enableOptions(); // 圖片載入後才啟用選項
+                };
+                plantImage.onerror = () => {
+                    // 圖片載入失敗
+                    console.error('圖片載入失敗，嘗試下一題');
+                    throw new Error('圖片載入失敗');
+                }
+
+            } catch (error) {
+                console.error('載入問題時出錯:', error);
+                feedbackMessage.textContent = '載入問題失敗，自動嘗試下一題...';
+                feedbackMessage.classList.add('text-red-400');
+                // 1 秒後自動重試
+                setTimeout(loadNewQuestion, 1000);
+            }
+        }
+
+        /**
+         * 生成選項按鈕
+         */
+        function populateOptions(options) {
+            optionsGrid.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option.common;
+                button.dataset.common = option.common; // 存儲俗名以便檢查
+                button.className = 'option-button p-4 bg-gray-700 rounded-lg text-lg border-2 border-gray-600 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50';
+                button.disabled = true; // 預設禁用，等圖片載入
+                
+                button.addEventListener('click', () => checkAnswer(button, option));
+                optionsGrid.appendChild(button);
+            });
+        }
+
+        /**
+         * 啟用選項
+         */
+        function enableOptions() {
+            const buttons = optionsGrid.querySelectorAll('.option-button');
+            buttons.forEach(button => button.disabled = false);
+        }
+
+
+        /**
+         * 禁用選項
+         */
+        function disableOptions() {
+            const buttons = optionsGrid.querySelectorAll('.option-button');
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        /**
+         * 檢查答案
+         */
+        function checkAnswer(button, selectedOption) {
+            if (isLoading) return;
+            disableOptions(); // 回答後禁用所有選項
+
+            const isCorrect = selectedOption.common === currentCorrectCommonName;
+
+            if (isCorrect) {
+                button.classList.add('correct'); // 綠色
+                feedbackMessage.textContent = '答對了！';
+                feedbackMessage.classList.add('text-green-400');
+            } else {
+                button.classList.add('incorrect'); // 紅色
+                feedbackMessage.textContent = `答錯了。這是 ${currentCorrectCommonName}。`;
+                feedbackMessage.classList.add('text-red-400');
+
+                // 標記出正確答案
+                const correctButton = Array.from(optionsGrid.children).find(
+                    btn => btn.dataset.common === currentCorrectCommonName
+                );
+                if (correctButton) {
+                    correctButton.classList.add('correct');
+                }
+            }
+
+            // 顯示 "下一題" 按鈕
+            nextButton.classList.remove('hidden');
+        }
+
+        // -------------------------------------------------------------------------
+        // 事件監聽器
+        // -------------------------------------------------------------------------
+        
+        // 頁面載入時
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 顯示載入動畫
+            imageSpinner.classList.remove('hidden');
+            feedbackMessage.textContent = '正在載入題庫...';
+            
+            // 先載入 CSV，再載入第一個問題
+            await loadCSVData();
+            
+            if (plantQuizData.length >= 4) {
+                feedbackMessage.textContent = ''; // 清除載入訊息
+                loadNewQuestion();
+            } else {
+                // loadCSVData 內部已有錯誤處理
+                console.error('題庫資料不足，無法開始遊戲。');
+                if (!feedbackMessage.textContent.includes('失敗')) {
+                    feedbackMessage.textContent = '題庫資料不足，無法開始遊戲。';
+                    feedbackMessage.classList.add('text-red-400');
+                    imageSpinner.classList.add('hidden');
+                }
+            }
+        });
+
+        // 點擊 "下一題"
+        nextButton.addEventListener('click', () => {
+            loadNewQuestion();
+        });
+
+    </script>
+
+</body>
+</html>
