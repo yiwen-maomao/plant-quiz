@@ -694,7 +694,7 @@ const plantQuizData = [
     { scientific: 'Alternanthera sessilis', common: '蓮子草' },
     { scientific: 'Alternanthera reineckii', common: '瑞氏蓮子草' },
     { scientific: 'Alternanthera bettzickiana', common: '毛蓮子草' },
-    { scientific: 'Alternanthera dentata 'Red Marble'', common: '紅龍草' },
+    { scientific: 'Alternanthera dentata', common: '紅龍草' },
     { scientific: 'Alternanthera ficoidea', common: '法國莧' },
     { scientific: 'Alternanthera nodiflora', common: '節節花' },
     { scientific: 'Alternanthera philoxeroides', common: '空心蓮子草' },
