@@ -1,39 +1,293 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>植物識別練習</title>
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Inter 字體 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            /* 優先使用 Noto Sans TC (繁中)，Inter 作為後備 */
-            font-family: 'Noto Sans TC', 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>植物識別練習</title>
 
-        /* 載入動畫 */
-        .loader {
-            border: 5px solid #f3f3f3; /* Light grey */
-            border-top: 5px solid #3498db; /* Blue */
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+  <!-- 字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"/>
 
+  <style>
+    body {
+      font-family: 'Noto Sans TC', 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px; height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    .option-button.correct { background-color:#22c55e; border-color:#86efac; color:#fff; }
+    .option-button.incorrect { background-color:#ef4444; border-color:#fca5a5; color:#fff; }
+    .option-button:disabled { opacity:.8; cursor:not-allowed; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+  <div class="flex flex-col items-center justify-center min-h-screen p-4">
+    <h1 class="text-3xl font-bold mb-6 text-center">植物識別練習</h1>
+    <p class="text-gray-400 mb-6 text-center max-w-lg">請根據下方的圖片，選出正確的植物名稱。</p>
+
+    <!-- 圖片容器 -->
+    <div id="image-container" class="w-full max-w-lg h-80 sm:h-96 bg-gray-800 rounded-lg shadow-xl mb-6 flex items-center justify-center overflow-hidden border-2 border-gray-700">
+      <div id="image-spinner" class="loader"></div>
+      <img id="plant-image" src="" alt="植物照片" class="w-full h-full object-cover hidden" referrerpolicy="no-referrer">
+    </div>
+
+    <!-- 選項網格 -->
+    <div id="options-grid" class="grid grid-cols-2 gap-4 w-full max-w-lg"></div>
+
+    <!-- 反饋訊息 -->
+    <div id="feedback-message" class="mt-4 text-xl h-8 text-center font-medium"></div>
+
+    <!-- 下一題按鈕 -->
+    <button id="next-button" class="mt-4 px-8 py-3 bg-blue-600 rounded-lg text-lg font-semibold hover:bg-blue-500 transition-all duration-200 shadow-lg hidden">
+      下一題
+    </button>
+  </div>
+
+  <!-- ✅ 外部題庫檔案（與本檔同層，或依實際路徑調整） -->
+  <script src="plantQuizData.js"></script>
+
+  <!-- 主程式 -->
+  <script>
+    // -------------------------------------------------------------------------
+    // DOM 元素
+    // -------------------------------------------------------------------------
+    const imageSpinner = document.getElementById('image-spinner');
+    const plantImage = document.getElementById('plant-image');
+    const optionsGrid = document.getElementById('options-grid');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const nextButton = document.getElementById('next-button');
+
+    // -------------------------------------------------------------------------
+    // 遊戲狀態
+    // -------------------------------------------------------------------------
+    let currentCorrectAnswer = null;
+    let isLoading = false;
+
+    // -------------------------------------------------------------------------
+    // 工具：洗牌
+    // -------------------------------------------------------------------------
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // -------------------------------------------------------------------------
+    // iNaturalist：加速與穩定
+    // -------------------------------------------------------------------------
+    const taxonCache = new Map(); // scientificName -> taxon object
+    const photoCache = new Map(); // taxonId -> [urls]
+
+    // 1) 以學名查 Taxon（盡量精準匹配）
+    async function findTaxon(scientificName) {
+      if (taxonCache.has(scientificName)) return taxonCache.get(scientificName);
+
+      const url =
+        `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&rank=species&per_page=10&is_active=true`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Taxa API 錯誤: ${res.status}`);
+        const data = await res.json();
+        const list = data?.results || [];
+        if (list.length === 0) return null;
+
+        // 全字匹配優先，否則取第一筆
+        const exact = list.find(t => (t.name || '').toLowerCase() === scientificName.toLowerCase());
+        const taxon = exact || list[0];
+        taxonCache.set(scientificName, taxon);
+        return taxon;
+      } catch (err) {
+        console.error('findTaxon 失敗：', err);
+        return null;
+      }
+    }
+
+    // 2) 先從 taxa/:id 拿 default_photo / taxon_photos；失敗再退 observations
+    async function getPhotosForTaxon(taxonId, perPage = 30) {
+      if (photoCache.has(taxonId)) return photoCache.get(taxonId);
+
+      // A) taxa/:id
+      try {
+        const taxaRes = await fetch(`https://api.inaturalist.org/v1/taxa/${taxonId}`);
+        if (taxaRes.ok) {
+          const taxaData = await taxaRes.json();
+          const taxon = taxaData?.results?.[0];
+          const urls = [];
+
+          if (taxon?.default_photo) {
+            const p = taxon.default_photo;
+            if (p.medium_url) urls.push(p.medium_url);
+            if (p.large_url) urls.push(p.large_url);
+            if (p.url) urls.push(p.url);
+          }
+          if (Array.isArray(taxon?.taxon_photos)) {
+            taxon.taxon_photos.forEach(tp => {
+              const p = tp.photo || {};
+              if (p.medium_url) urls.push(p.medium_url);
+              else if (p.large_url) urls.push(p.large_url);
+              else if (p.url) urls.push(p.url);
+            });
+          }
+
+          if (urls.length > 0) {
+            const dedup = Array.from(new Set(urls)).map(u => u.replace('http://', 'https://'));
+            photoCache.set(taxonId, dedup);
+            return dedup;
+          }
+        }
+      } catch (e) {
+        console.warn('taxa/:id 取圖失敗，改用 observations：', e);
+      }
+
+      // B) observations 備援
+      try {
+        const obsUrl =
+          `https://api.inaturalist.org/v1/observations?taxon_id=${taxonId}&per_page=${perPage}&order=desc&order_by=created_at&photos=true`;
+        const res = await fetch(obsUrl);
+        if (!res.ok) throw new Error(`Observations API 錯誤: ${res.status}`);
+        const data = await res.json();
+
+        const urls = (data?.results || [])
+          .flatMap(r => r.photos || [])
+          .map(p => {
+            if (p.medium_url) return p.medium_url;
+            if (p.large_url) return p.large_url;
+            if (p.url) return p.url.replace('square', 'medium'); // 舊欄位備援
+            return null;
+          })
+          .filter(Boolean)
+          .map(u => u.replace('http://', 'https://'));
+
+        const dedup = Array.from(new Set(urls));
+        photoCache.set(taxonId, dedup);
+        return dedup;
+      } catch (err) {
+        console.error('getPhotosForTaxon 觀察照片失敗：', err);
+        return [];
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // UI：生成選項、啟用/停用
+    // -------------------------------------------------------------------------
+    function populateOptions(options) {
+      optionsGrid.innerHTML = '';
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.textContent = option.common;
+        button.dataset.common = option.common;
+        button.className = 'option-button p-4 bg-gray-700 rounded-lg text-lg border-2 border-gray-600 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50';
+        button.disabled = true; // 等圖片載入完成才啟用
+        button.addEventListener('click', () => checkAnswer(button, option));
+        optionsGrid.appendChild(button);
+      });
+    }
+    function enableOptions() {
+      optionsGrid.querySelectorAll('.option-button').forEach(btn => (btn.disabled = false));
+    }
+    function disableOptions() {
+      optionsGrid.querySelectorAll('.option-button').forEach(btn => (btn.disabled = true));
+    }
+
+    // -------------------------------------------------------------------------
+    // 檢查答案
+    // -------------------------------------------------------------------------
+    function checkAnswer(button, selectedOption) {
+      if (isLoading) return;
+      disableOptions();
+
+      const isCorrect = selectedOption.common === currentCorrectAnswer.common;
+      if (isCorrect) {
+        button.classList.add('correct');
+        feedbackMessage.textContent = '答對了！';
+        feedbackMessage.classList.add('text-green-400');
+      } else {
+        button.classList.add('incorrect');
+        feedbackMessage.textContent = `答錯了。這是 ${currentCorrectAnswer.common}。`;
+        feedbackMessage.classList.add('text-red-400');
+
+        const correctButton = Array.from(optionsGrid.children)
+          .find(btn => btn.dataset.common === currentCorrectAnswer.common);
+        if (correctButton) correctButton.classList.add('correct');
+      }
+      nextButton.classList.remove('hidden');
+    }
+
+    // -------------------------------------------------------------------------
+    // 核心：載入新問題（已改為優先用 taxa 圖片）
+    // -------------------------------------------------------------------------
+    async function loadNewQuestion() {
+      if (isLoading) return;
+      isLoading = true;
+
+      // UI reset
+      feedbackMessage.textContent = '';
+      feedbackMessage.className = 'mt-4 text-xl h-8 text-center font-medium';
+      nextButton.classList.add('hidden');
+      optionsGrid.innerHTML = '';
+      plantImage.classList.add('hidden');
+      imageSpinner.classList.remove('hidden');
+
+      try {
+        // 挑 4 個不重複植物
+        const selectedPlants = shuffleArray(plantQuizData).slice(0, 4);
+        currentCorrectAnswer = selectedPlants[0];
+
+        // 產生選項
+        const options = selectedPlants.map(p => ({ common: p.common, scientific: p.scientific }));
+        populateOptions(shuffleArray(options));
+
+        // 找 taxon + 取圖
+        const taxon = await findTaxon(currentCorrectAnswer.scientific);
+        if (!taxon) throw new Error(`找不到 Taxon：${currentCorrectAnswer.scientific}`);
+
+        const photos = await getPhotosForTaxon(taxon.id);
+        if (!photos || photos.length === 0) throw new Error(`沒有可用照片：${currentCorrectAnswer.scientific}`);
+
+        const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+        plantImage.src = randomPhoto;
+
+        plantImage.onload = () => {
+          imageSpinner.classList.add('hidden');
+          plantImage.classList.remove('hidden');
+          isLoading = false;
+          enableOptions();
+        };
+        plantImage.onerror = () => {
+          throw new Error('圖片載入失敗（可能為連結已失效）');
+        };
+      } catch (err) {
+        console.error('載入問題時出錯：', err);
+        feedbackMessage.textContent = '載入圖片失敗，換一題試試…';
+        feedbackMessage.classList.add('text-red-400');
+        setTimeout(() => { isLoading = false; loadNewQuestion(); }, 800);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 事件
+    // -------------------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', loadNewQuestion);
+    nextButton.addEventListener('click', loadNewQuestion);
+  </script>
+</body>
+</html>
         /* 自訂按鈕狀態的樣式 */
         .option-button.correct {
             background-color: #22c55e; /* green-500 */
