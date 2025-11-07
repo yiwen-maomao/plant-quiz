@@ -57,10 +57,8 @@
     </button>
   </div>
 
-  <!-- ✅ 外部題庫（請將 plantQuizData.js 放在同層；如在資料夾請調整路徑） -->
-  <script src="plantQuizData.js" defer></script>
-
   <!-- 主程式（defer 確保在 DOM 準備好且題庫載入後執行） -->
+  
   <script defer>
     async function fetchWithTimeout(resource, options = {}) {
       const { timeout = 12000 } = options;
@@ -75,6 +73,89 @@
         throw e;
       }
     }
+    const plantQuizData = [
+    { scientific: 'Acroceras macrum', common: '尼羅草' },
+    { scientific: 'Agropyron formosanum', common: '臺灣鵝觀草' },
+    { scientific: 'Agropyron mayebaranum', common: '前原鵝觀草' },
+    { scientific: 'Agrostis avenacea', common: '類燕麥翦股穎' },
+    { scientific: 'Agrostis clavata', common: '翦股穎' },
+    { scientific: 'Agrostis stolonifera', common: '匍匐翦股穎' },
+    { scientific: 'Agrostis dimorpholemma', common: '多形翦穎' },
+    { scientific: 'Agrostis infirma', common: '玉山翦股穎' },
+    { scientific: 'Alloteropsis semialata', common: '毛穎草' },
+    { scientific: 'Alopecurus myosuroides', common: '大穗看麥娘' },
+    { scientific: 'Alopecurus pratensis', common: '原野看麥娘' },
+    { scientific: 'Alopecurus aequalis', common: '看麥娘' },
+    { scientific: 'Aniselytron treutleri', common: '溝稃草' },
+    { scientific: 'Aniselytron agrostoides', common: '小穎溝稃草' },
+    { scientific: 'Anthoxanthum odoratum', common: '香黃花茅' },
+    { scientific: 'Anthoxanthum horsfieldii', common: '臺灣黃花茅' },
+    { scientific: 'Apluda mutica', common: '水蔗草' },
+    { scientific: 'Apocopis wrightii', common: '瑞氏楔穎草' },
+    { scientific: 'Aristida chinensis', common: '華三芒草' },
+    { scientific: 'Arrhenatherum elatius', common: '燕麥草' },
+    { scientific: 'Arthraxon hispidus', common: '藎草' },
+    { scientific: 'Arthraxon lancifolius', common: '小葉藎草' },
+    { scientific: 'Arthraxon pauciflorus', common: '粗梗藎草' },
+    { scientific: 'Arthraxon quartinianus', common: '暖地藎草' },
+    { scientific: 'Arthrostylidium naibunensis', common: '內文竹' },
+    { scientific: 'Arundinaria graminea', common: '大明竹' },
+    { scientific: 'Arundinaria linearis', common: '琉球矢竹' },
+    { scientific: 'Arundinaria simonii', common: '空心苦竹' },
+    { scientific: 'Arundinaria hindsii', common: '邢氏苦竹' },
+    { scientific: 'Arundinaria variegata', common: '稚子竹' },
+    { scientific: 'Arundinella hirta', common: '野古草' },
+    { scientific: 'Arundinella nepalensis', common: '尼泊爾火茅' },
+    { scientific: 'Arundinella setosa', common: '刺芒野古草' },
+    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
+    { scientific: 'Arundinella filiformis', common: '絲狀野古草' },
+    { scientific: 'Arundinella pubescens', common: '毛野古草' },
+    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
+    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
+    { scientific: 'Arundo donax', common: '蘆竹' },
+    { scientific: 'Arundo formosana', common: '臺灣蘆竹' },
+    { scientific: 'Avena fatua', common: '野燕麥' },
+    { scientific: 'Avena sativa', common: '燕麥' },
+    { scientific: 'Axonopus affinis', common: '類地毯草' },
+    { scientific: 'Axonopus compressus', common: '地毯草' },
+    { scientific: 'Axonopus scoparius', common: '帝皇草' },
+    { scientific: 'Bambusa multiplex', common: '蓬萊竹' },
+    { scientific: 'Bambusa oldhamii', common: '綠竹' },
+    { scientific: 'Bambusa pachinensis', common: '八芝蘭竹' },
+    { scientific: 'Bambusa taiwanensis', common: '烏腳綠竹' },
+    { scientific: 'Bambusa bambos', common: '茨竹' },
+    { scientific: 'Bambusa dolichoclada', common: '長枝竹' },
+    { scientific: 'Bambusa dolichomerithalla', common: '火廣竹' },
+    { scientific: 'Bambusa stenostachya', common: '刺竹' },
+    { scientific: 'Bambusa utilis', common: '烏葉竹' },
+    { scientific: 'Bambusa ventricosa', common: '佛竹' },
+    { scientific: 'Bambusa beecheyana', common: '南洋竹' },
+    { scientific: 'Bambusa vulgaris', common: '泰山竹' },
+    { scientific: 'Bothriochloa intermedia', common: '臭根子草' },
+    { scientific: 'Bothriochloa ischaemum', common: '白羊草' },
+    { scientific: 'Bothriochloa macera', common: '大穗孔穎草' },
+    { scientific: 'Bothriochloa glabra', common: '歧穗臭根子草' },
+    { scientific: 'Bothriochloa bladhii', common: '臭根子草' },
+    { scientific: 'Brachiaria mutica', common: '巴拉草' },
+    { scientific: 'Brachiaria subquadripara', common: '四生臂形草' },
+    { scientific: 'Brachiaria villosa', common: '毛臂形草' },
+    { scientific: 'Brachiaria reptans', common: '尾稃草' },
+    { scientific: 'Brachypodium kawakamii', common: '川上短柄草' },
+    { scientific: 'Brachypodium sylvaticum', common: '基隆短柄草' },
+    { scientific: 'Briza minor', common: '銀鱗草' },
+    { scientific: 'Briza maxima', common: '凌風草' },
+    { scientific: 'Bromus carinatus', common: '長芒扁雀麥' },
+    { scientific: 'Bromus catharticus', common: '大扁雀麥' },
+    { scientific: 'Bromus commutatus', common: '歐雀麥' },
+    { scientific: 'Bromus rigidus', common: '硬雀麥' },
+    { scientific: 'Bromus hordeaceus', common: '毛雀麥' },
+    { scientific: 'Bromus morrisonensis', common: '玉山雀麥' },
+    { scientific: 'Bromus pubescens', common: '短毛雀麥' },
+    { scientific: 'Bromus formosanus', common: '臺灣雀麥' },
+    { scientific: 'Bromus japonicus', common: '雀麥' },
+    { scientific: 'Bromus diandrus', common: '硬雀麥' },
+    { scientific: 'Calamagrostis epigeios', common: '拂子茅' },
+  ];
 
     const imageSpinner = document.getElementById('image-spinner');
     const plantImage = document.getElementById('plant-image');
