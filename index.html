@@ -163,7 +163,7 @@
                 
                 const photoUrls = data.results
                     .flatMap(result => result.photos || [])
-                    .map(photo => photo.url.replace('square', 'large')); // 將方形圖片替換為大圖
+                    .map(photo => photo.url.replace('square', 'medium')); // 將方形圖片替換為大圖
                 
                 return photoUrls.filter(url => url); // 過濾掉無效的 URL
             } catch (error) {
