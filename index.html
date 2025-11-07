@@ -85,341 +85,247 @@
     </div>
 
     <script>
-        // -------------------------------------------------------------------------
-        // 題庫 (學名, 中文俗名)
-        // 您可以在此處添加更多植物
-        // -------------------------------------------------------------------------
-        const plantQuizData = [
-            { scientific: 'Acroceras macrum', common: '尼羅草' },
-    { scientific: 'Agropyron formosanum', common: '臺灣鵝觀草' },
-    { scientific: 'Agropyron mayebaranum', common: '前原鵝觀草' },
-    { scientific: 'Agrostis avenacea', common: '類燕麥翦股穎' },
-    { scientific: 'Agrostis clavata', common: '翦股穎' },
-    { scientific: 'Agrostis stolonifera', common: '匍匐翦股穎' },
-    { scientific: 'Agrostis dimorpholemma', common: '多形翦穎' },
-    { scientific: 'Agrostis infirma', common: '玉山翦股穎' },
-    { scientific: 'Alloteropsis semialata', common: '毛穎草' },
-    { scientific: 'Alopecurus myosuroides', common: '大穗看麥娘' },
-    { scientific: 'Alopecurus pratensis', common: '原野看麥娘' },
-    { scientific: 'Alopecurus aequalis', common: '看麥娘' },
-    { scientific: 'Aniselytron treutleri', common: '溝稃草' },
-    { scientific: 'Aniselytron agrostoides', common: '小穎溝稃草' },
-    { scientific: 'Anthoxanthum odoratum', common: '香黃花茅' },
-    { scientific: 'Anthoxanthum horsfieldii', common: '臺灣黃花茅' },
-    { scientific: 'Apluda mutica', common: '水蔗草' },
-    { scientific: 'Apocopis wrightii', common: '瑞氏楔穎草' },
-    { scientific: 'Aristida chinensis', common: '華三芒草' },
-    { scientific: 'Arrhenatherum elatius', common: '燕麥草' },
-    { scientific: 'Arthraxon hispidus', common: '藎草' },
-    { scientific: 'Arthraxon lancifolius', common: '小葉藎草' },
-    { scientific: 'Arthraxon pauciflorus', common: '粗梗藎草' },
-    { scientific: 'Arthraxon quartinianus', common: '暖地藎草' },
-    { scientific: 'Arthrostylidium naibunensis', common: '內文竹' },
-    { scientific: 'Arundinaria graminea', common: '大明竹' },
-    { scientific: 'Arundinaria linearis', common: '琉球矢竹' },
-    { scientific: 'Arundinaria simonii', common: '空心苦竹' },
-    { scientific: 'Arundinaria hindsii', common: '邢氏苦竹' },
-    { scientific: 'Arundinaria variegata', common: '稚子竹' },
-    { scientific: 'Arundinella hirta', common: '野古草' },
-    { scientific: 'Arundinella nepalensis', common: '尼泊爾火茅' },
-    { scientific: 'Arundinella setosa', common: '刺芒野古草' },
-    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
-    { scientific: 'Arundinella filiformis', common: '絲狀野古草' },
-    { scientific: 'Arundinella pubescens', common: '毛野古草' },
-    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
-    { scientific: 'Arundinella taiwanica', common: '臺灣野古草' },
-    { scientific: 'Arundo donax', common: '蘆竹' },
-    { scientific: 'Arundo formosana', common: '臺灣蘆竹' },
-    { scientific: 'Avena fatua', common: '野燕麥' },
-    { scientific: 'Avena sativa', common: '燕麥' },
-    { scientific: 'Axonopus affinis', common: '類地毯草' },
-    { scientific: 'Axonopus compressus', common: '地毯草' },
-    { scientific: 'Axonopus scoparius', common: '帝皇草' },
-    { scientific: 'Bambusa multiplex', common: '蓬萊竹' },
-    { scientific: 'Bambusa oldhamii', common: '綠竹' },
-    { scientific: 'Bambusa pachinensis', common: '八芝蘭竹' },
-    { scientific: 'Bambusa taiwanensis', common: '烏腳綠竹' },
-    { scientific: 'Bambusa bambos', common: '茨竹' },
-    { scientific: 'Bambusa dolichoclada', common: '長枝竹' },
-    { scientific: 'Bambusa dolichomerithalla', common: '火廣竹' },
-    { scientific: 'Bambusa stenostachya', common: '刺竹' },
-    { scientific: 'Bambusa utilis', common: '烏葉竹' },
-    { scientific: 'Bambusa ventricosa', common: '佛竹' },
-    { scientific: 'Bambusa beecheyana', common: '南洋竹' },
-    { scientific: 'Bambusa vulgaris', common: '泰山竹' },
-    { scientific: 'Bothriochloa intermedia', common: '臭根子草' },
-    { scientific: 'Bothriochloa ischaemum', common: '白羊草' },
-    { scientific: 'Bothriochloa macera', common: '大穗孔穎草' },
-    { scientific: 'Bothriochloa glabra', common: '歧穗臭根子草' },
-    { scientific: 'Bothriochloa bladhii', common: '臭根子草' },
-    { scientific: 'Brachiaria mutica', common: '巴拉草' },
-    { scientific: 'Brachiaria subquadripara', common: '四生臂形草' },
-    { scientific: 'Brachiaria villosa', common: '毛臂形草' },
-    { scientific: 'Brachiaria reptans', common: '尾稃草' },
-    { scientific: 'Brachypodium kawakamii', common: '川上短柄草' },
-    { scientific: 'Brachypodium sylvaticum', common: '基隆短柄草' },
-    { scientific: 'Briza minor', common: '銀鱗草' },
-    { scientific: 'Briza maxima', common: '凌風草' },
-    { scientific: 'Bromus carinatus', common: '長芒扁雀麥' },
-    { scientific: 'Bromus catharticus', common: '大扁雀麥' },
-    { scientific: 'Bromus commutatus', common: '歐雀麥' },
-    { scientific: 'Bromus rigidus', common: '硬雀麥' },
-    { scientific: 'Bromus hordeaceus', common: '毛雀麥' },
-    { scientific: 'Bromus morrisonensis', common: '玉山雀麥' },
-    { scientific: 'Bromus pubescens', common: '短毛雀麥' },
-    { scientific: 'Bromus formosanus', common: '臺灣雀麥' },
-    { scientific: 'Bromus japonicus', common: '雀麥' },
-    { scientific: 'Bromus diandrus', common: '硬雀麥' },
-    { scientific: 'Calamagrostis epigeios', common: '拂子茅' },
-    { scientific: 'Calamagrostis arundinacea', common: '類蘆野青茅' },
-    { scientific: 'Capillipedium assimile', common: '硬稈子草' },
-    { scientific: 'Capillipedium kwashotensis', common: '綠島細柄草' },
-    { scientific: 'Capillipedium parviflorum', common: '細柄草' },
-    { scientific: 'Cenchrus ciliaris', common: '水牛草' },
-    { scientific: 'Cenchrus echinatus', common: '蒺藜草' },
-    { scientific: 'Cenchrus setaceus', common: '羽絨狼尾草' },
-    { scientific: 'Cenchrus alopecuroides', common: '狼尾草' },
-    { scientific: 'Cenchrus americanus', common: '珍珠粟' },
-    { scientific: 'Cenchrus setosus', common: '牧地狼尾草' },
-    { scientific: 'Cenchrus clandestinus', common: '舖地狼尾草' },
-    { scientific: 'Cenchrus purpureus', common: '象草' },
-    { scientific: 'Centotheca lappacea', common: '假淡竹葉' },
-    { scientific: 'Chikusichloa mutica', common: '無芒山澗草' },
-    { scientific: 'Chimonobambusa quadrangularis', common: '四方竹' },
-    { scientific: 'Chimonobambusa szechuanensis', common: '四川方竹' },
-    { scientific: 'Chimonobambusa marmorea', common: '寒竹' },
-    { scientific: 'Carduelis sinica', common: '金翅雀' },
-    { scientific: 'Chloris barbata', common: '孟仁草' },
-    { scientific: 'Chloris formosana', common: '臺灣虎尾草' },
-    { scientific: 'Chloris gayana', common: '蓋氏虎尾草' },
-    { scientific: 'Chloris pilosa', common: '毛虎尾草' },
-    { scientific: 'Chloris virgata', common: '虎尾草' },
-    { scientific: 'Chloris divaricata', common: '垂穗虎尾草' },
-    { scientific: 'Chloris sinica', common: '金翅雀' },
-    { scientific: 'Chrysopogon aciculatus', common: '竹節草' },
-    { scientific: 'Chrysopogon zizanioides', common: '培地茅' },
-    { scientific: 'Cleistogenes hackelii', common: '朝陽隱子草' },
-    { scientific: 'Coix lacryma-jobi', common: '薏苡' },
-        ];
+    // -------------------------------------------------------------------------
+    // 題庫 (學名, 中文俗名, iNaturalist Taxon ID)
+    // -------------------------------------------------------------------------
+    const plantQuizData = [
+        // 確保你的資料都像這樣有 taxonId
+        { scientific: 'Acroceras macrum', common: '尼羅草', taxonId: 52851 },
+        { scientific: 'Agropyron formosanum', common: '臺灣鵝觀草', taxonId: 894451 },
+        { scientific: 'Agrostis avenacea', common: '類燕麥翦股穎', taxonId: 75291 },
+        { scientific: 'Agrostis stolonifera', common: '匍匐翦股穎', taxonId: 52794 },
+        { scientific: 'Alloteropsis semialata', common: '毛穎草', taxonId: 343360 },
+        { scientific: 'Alopecurus aequalis', common: '看麥娘', taxonId: 75369 },
+        { scientific: 'Apluda mutica', common: '水蔗草', taxonId: 343365 },
+        { scientific: 'Aristida chinensis', common: '華三芒草', taxonId: 362489 },
+        { scientific: 'Arthraxon hispidus', common: '藎草', taxonId: 123000 },
+        { scientific: 'Arundinella hirta', common: '野古草', taxonId: 171630 },
+        { scientific: 'Arundo donax', common: '蘆竹', taxonId: 48485 },
+        { scientific: 'Avena fatua', common: '野燕麥', taxonId: 52693 },
+        { scientific: 'Avena sativa', common: '燕麥', taxonId: 47653 },
+        { scientific: 'Axonopus compressus', common: '地毯草', taxonId: 158913 },
+        { scientific: 'Bambusa multiplex', common: '蓬萊竹', taxonId: 159045 },
+        { scientific: 'Bambusa oldhamii', common: '綠竹', taxonId: 129037 },
+        // ... etc
+    ];
 
-        // -------------------------------------------------------------------------
-        // DOM 元素
-        // -------------------------------------------------------------------------
-        const imageContainer = document.getElementById('image-container');
-        const imageSpinner = document.getElementById('image-spinner');
-        const plantImage = document.getElementById('plant-image');
-        const optionsGrid = document.getElementById('options-grid');
-        const feedbackMessage = document.getElementById('feedback-message');
-        const nextButton = document.getElementById('next-button');
+    // -------------------------------------------------------------------------
+    // DOM 元素
+    // -------------------------------------------------------------------------
+    const imageContainer = document.getElementById('image-container');
+    const imageSpinner = document.getElementById('image-spinner');
+    const plantImage = document.getElementById('plant-image');
+    const optionsGrid = document.getElementById('options-grid');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const nextButton = document.getElementById('next-button');
 
-        // -------------------------------------------------------------------------
-        // 遊戲狀態
-        // -------------------------------------------------------------------------
-        let currentCorrectAnswer = null;
-        let isLoading = false;
+    // -------------------------------------------------------------------------
+    // 遊戲狀態
+    // -------------------------------------------------------------------------
+    let currentCorrectAnswer = null;
+    let isLoading = false;
+    // 建立一個快取來儲存已獲取的照片 URL，避免重複請求
+    const photoCache = new Map();
 
-        // -------------------------------------------------------------------------
-        // iNaturalist API 函數
-        // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // iNaturalist API 函數 (已簡化)
+    // -------------------------------------------------------------------------
 
-        /**
-         * 根據學名查詢物種的 taxon_id
-         */
-        async function getTaxonId(scientificName) {
-            const url = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`API 響應錯誤: ${response.status}`);
-                const data = await response.json();
-                if (data.total_results > 0) {
-                    // 確保我們拿到的是完全匹配的物種
-                    const exactMatch = data.results.find(r => r.name.toLowerCase() === scientificName.toLowerCase());
-                    return exactMatch ? exactMatch.id : data.results[0].id;
-                } else {
-                    console.error(`未找到 ${scientificName} 的 taxon_id`);
-                    return null;
-                }
-            } catch (error) {
-                console.error('getTaxonId 請求失敗:', error);
-                return null;
-            }
+    /**
+     * 【新】根據 taxon_id 獲取物種資料（包含照片）
+     * 這一個請求取代了舊的 getTaxonId 和 getObservationPhotos
+     */
+    async function getTaxonData(taxonId) {
+        // 檢查快取
+        if (photoCache.has(taxonId)) {
+            return photoCache.get(taxonId);
         }
 
-        /**
-         * 根據 taxon_id 獲取觀察記錄的照片
-         */
-        async function getObservationPhotos(taxonId, perPage = 20) {
-            const url = `https://api.inaturalist.org/v1/observations?taxon_id=${taxonId}&per_page=${perPage}&order=desc&order_by=created_at&photos=true`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`API 響應錯誤: ${response.status}`);
-                const data = await response.json();
+        const url = `https://api.inaturalist.org/v1/taxa/${taxonId}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`API 響應錯誤: ${response.status}`);
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                const taxon = data.results[0];
+                // 從 taxon_photos 中提取高畫質照片 URL
+                const photoUrls = taxon.taxon_photos
+                    .map(tp => tp.photo.large_url || tp.photo.medium_url) // 優先用 large, 其次 medium
+                    .filter(Boolean); // 過濾掉 null 或 undefined
                 
-                const photoUrls = data.results
-                    .flatMap(result => result.photos || [])
-                    .map(photo => photo.url.replace('square', 'small')); // 將方形圖片替換為大圖
-                
-                return photoUrls.filter(url => url); // 過濾掉無效的 URL
-            } catch (error) {
-                console.error('getObservationPhotos 請求失敗:', error);
+                // 存入快取
+                photoCache.set(taxonId, photoUrls);
+                return photoUrls;
+            } else {
                 return [];
             }
+        } catch (error) {
+            console.error('getTaxonData 請求失敗:', error);
+            return [];
         }
+    }
 
-        // -------------------------------------------------------------------------
-        // 遊戲邏輯函數
-        // -------------------------------------------------------------------------
 
-        /**
-         * 隨機打亂陣列
-         */
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
+    // -------------------------------------------------------------------------
+    // 遊戲邏輯函數
+    // -------------------------------------------------------------------------
+
+    /**
+     * 隨機打亂陣列
+     */
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
+        return array;
+    }
 
-        /**
-         * 載入新問題
-         */
-        async function loadNewQuestion() {
-            if (isLoading) return;
-            isLoading = true;
+    /**
+     * 載入新問題 (已更新)
+     */
+    async function loadNewQuestion() {
+        if (isLoading) return;
+        isLoading = true;
 
-            // 1. 重置 UI
-            feedbackMessage.textContent = '';
-            feedbackMessage.className = 'mt-4 text-xl h-8 text-center font-medium'; // 重置顏色
-            nextButton.classList.add('hidden');
-            optionsGrid.innerHTML = ''; // 清空選項
-            plantImage.classList.add('hidden'); // 隱藏圖片
-            imageSpinner.classList.remove('hidden'); // 顯示載入動畫
+        // 1. 重置 UI
+        feedbackMessage.textContent = '';
+        feedbackMessage.className = 'mt-4 text-xl h-8 text-center font-medium';
+        nextButton.classList.add('hidden');
+        optionsGrid.innerHTML = '';
+        plantImage.classList.add('hidden');
+        imageSpinner.classList.remove('hidden');
 
-            try {
-                // 2. 挑選 4 個不重複的植物
-                const shuffledPlants = shuffleArray([...plantQuizData]);
-                const selectedPlants = shuffledPlants.slice(0, 4);
-
-                // 3. 指定一個為正確答案
-                currentCorrectAnswer = selectedPlants[0];
-                const options = selectedPlants.map(p => ({ common: p.common, scientific: p.scientific }));
-                
-                // 4. 打亂選項
-                const shuffledOptions = shuffleArray(options);
-                populateOptions(shuffledOptions);
-
-                // 5. 抓取圖片
-                const taxonId = await getTaxonId(currentCorrectAnswer.scientific);
-                if (!taxonId) throw new Error(`找不到 ${currentCorrectAnswer.scientific} 的 Taxon ID`);
-
-                const photos = await getObservationPhotos(taxonId);
-                if (photos.length === 0) throw new Error(`找不到 ${currentCorrectAnswer.scientific} 的照片`);
-
-                // 6. 隨機選一張照片並顯示
-                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
-                plantImage.src = randomPhoto;
-                
-                plantImage.onload = () => {
-                    // 圖片載入完成後
-                    imageSpinner.classList.add('hidden');
-                    plantImage.classList.remove('hidden');
-                    isLoading = false;
-                    enableOptions(); // 圖片載入後才啟用選項
-                };
-                plantImage.onerror = () => {
-                    // 圖片載入失敗
-                    throw new Error('圖片載入失敗');
-                }
-
-            } catch (error) {
-                console.error('載入問題時出錯:', error);
-                feedbackMessage.textContent = '載入問題失敗，請稍後重試...';
-                feedbackMessage.classList.add('text-red-400');
-                // 1 秒後自動重試
-                setTimeout(loadNewQuestion, 1000);
-            }
-        }
-
-        /**
-         * 生成選項按鈕
-         */
-        function populateOptions(options) {
-            optionsGrid.innerHTML = '';
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option.common;
-                button.dataset.common = option.common; // 存儲俗名以便檢查
-                button.className = 'option-button p-4 bg-gray-700 rounded-lg text-lg border-2 border-gray-600 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50';
-                button.disabled = true; // 預設禁用，等圖片載入
-                
-                button.addEventListener('click', () => checkAnswer(button, option));
-                optionsGrid.appendChild(button);
-            });
-        }
-
-        /**
-         * 啟用選項
-         */
-        function enableOptions() {
-            const buttons = optionsGrid.querySelectorAll('.option-button');
-            buttons.forEach(button => button.disabled = false);
-        }
-
-        /**
-         * 禁用選項
-         */
-        function disableOptions() {
-            const buttons = optionsGrid.querySelectorAll('.option-button');
-            buttons.forEach(button => button.disabled = true);
-        }
-
-        /**
-         * 檢查答案
-         */
-        function checkAnswer(button, selectedOption) {
-            if (isLoading) return;
-            disableOptions(); // 回答後禁用所有選項
-
-            const isCorrect = selectedOption.common === currentCorrectAnswer.common;
-
-            if (isCorrect) {
-                button.classList.add('correct'); // 綠色
-                feedbackMessage.textContent = '答對了！';
-                feedbackMessage.classList.add('text-green-400');
-            } else {
-                button.classList.add('incorrect'); // 紅色
-                feedbackMessage.textContent = `答錯了。這是 ${currentCorrectAnswer.common}。`;
-                feedbackMessage.classList.add('text-red-400');
-
-                // 標記出正確答案
-                const correctButton = Array.from(optionsGrid.children).find(
-                    btn => btn.dataset.common === currentCorrectAnswer.common
-                );
-                if (correctButton) {
-                    correctButton.classList.add('correct');
-                }
+        try {
+            // 2. 挑選 4 個不重複的植物 (只挑選有 taxonId 的)
+            const availablePlants = plantQuizData.filter(p => p.taxonId);
+            if (availablePlants.length < 4) {
+                throw new Error("題庫中帶有 taxonId 的植物不足 4 種");
             }
 
-            // 顯示 "下一題" 按鈕
-            nextButton.classList.remove('hidden');
-        }
+            const shuffledPlants = shuffleArray([...availablePlants]);
+            const selectedPlants = shuffledPlants.slice(0, 4);
 
-        // -------------------------------------------------------------------------
-        // 事件監聽器
-        // -------------------------------------------------------------------------
-        
-        // 頁面載入時
-        document.addEventListener('DOMContentLoaded', () => {
-            loadNewQuestion();
+            // 3. 指定一個為正確答案
+            currentCorrectAnswer = selectedPlants[0];
+            const options = selectedPlants.map(p => ({ common: p.common, scientific: p.scientific }));
+            
+            // 4. 打亂選項
+            const shuffledOptions = shuffleArray(options);
+            populateOptions(shuffledOptions);
+
+            // 5. 【新】抓取圖片 (現在超快)
+            // 確保 taxonId 存在
+            if (!currentCorrectAnswer.taxonId) {
+                throw new Error(`植物 ${currentCorrectAnswer.common} 缺少 taxonId`);
+            }
+            
+            const photos = await getTaxonData(currentCorrectAnswer.taxonId);
+            if (photos.length === 0) throw new Error(`找不到 ${currentCorrectAnswer.common} (${currentCorrectAnswer.taxonId}) 的照片`);
+
+            // 6. 隨機選一張照片並顯示
+            const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+            plantImage.src = randomPhoto;
+            
+            plantImage.onload = () => {
+                imageSpinner.classList.add('hidden');
+                plantImage.classList.remove('hidden');
+                isLoading = false;
+                enableOptions();
+            };
+            plantImage.onerror = () => {
+                throw new Error('圖片載入失敗');
+            }
+
+        } catch (error) {
+            console.error('載入問題時出錯:', error);
+            feedbackMessage.textContent = '載入問題失敗，自動重試...';
+            feedbackMessage.classList.add('text-red-400');
+            // 發生錯誤時，1.5 秒後自動重試
+            setTimeout(() => {
+                isLoading = false; // 重設 isLoading 狀態
+                loadNewQuestion();
+            }, 1500);
+        }
+    }
+
+    /**
+     * 生成選項按鈕
+     */
+    function populateOptions(options) {
+        optionsGrid.innerHTML = '';
+        options.forEach(option => {
+            const button = document.createElement('button');
+            button.textContent = option.common;
+            button.dataset.common = option.common; 
+            button.className = 'option-button p-4 bg-gray-700 rounded-lg text-lg border-2 border-gray-600 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50';
+            button.disabled = true; 
+            
+            button.addEventListener('click', () => checkAnswer(button, option));
+            optionsGrid.appendChild(button);
         });
+    }
 
-        // 點擊 "下一題"
-        nextButton.addEventListener('click', () => {
-            loadNewQuestion();
-        });
+    /**
+     * 啟用選項
+     */
+    function enableOptions() {
+        const buttons = optionsGrid.querySelectorAll('.option-button');
+        buttons.forEach(button => button.disabled = false);
+    }
 
-    </script>
+    /**
+     * 禁用選項
+     */
+    function disableOptions() {
+        const buttons = optionsGrid.querySelectorAll('.option-button');
+        buttons.forEach(button => button.disabled = true);
+    }
 
+    /**
+     * 檢查答案
+     */
+    function checkAnswer(button, selectedOption) {
+        if (isLoading) return;
+        disableOptions(); 
+
+        const isCorrect = selectedOption.common === currentCorrectAnswer.common;
+
+        if (isCorrect) {
+            button.classList.add('correct');
+            feedbackMessage.textContent = '答對了！';
+            feedbackMessage.classList.add('text-green-400');
+        } else {
+            button.classList.add('incorrect');
+            feedbackMessage.textContent = `答錯了。這是 ${currentCorrectAnswer.common}。`;
+            feedbackMessage.classList.add('text-red-400');
+
+            // 標記出正確答案
+            const correctButton = Array.from(optionsGrid.children).find(
+                btn => btn.dataset.common === currentCorrectAnswer.common
+            );
+            if (correctButton) {
+                correctButton.classList.add('correct');
+            }
+        }
+
+        // 顯示 "下一題" 按鈕
+        nextButton.classList.remove('hidden');
+    }
+
+    // -------------------------------------------------------------------------
+    // 事件監聽器
+    // -------------------------------------------------------------------------
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadNewQuestion();
+    });
+
+    nextButton.addEventListener('click', () => {
+        loadNewQuestion();
+    });
+
+</script>
 </body>
 </html>
